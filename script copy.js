@@ -1,7 +1,12 @@
 'use strict';
 var canvas = document.getElementById("myCanvas");
 var ctx = canvas.getContext("2d");
+var x = canvas.width/2;
+var y = canvas.height-30;
+var dx = 2;
+var dy = -2;
 var ballRadius = 10;
+var ballColor = "red";
 var paddleHeight = 10;
 var paddleWidth = 75;
 var paddleX = (canvas.width - paddleWidth)/2;
@@ -18,13 +23,18 @@ var score = 0;
 var combo = 0;
 var bricks = [];
 var previousCollisionTime = new Date();
-var ball = new Ball(canvas.width/2, canvas.height-30)
+var ball = new Ball()
 
 for(let c = 0; c < brickColumnCount; c++) {
     bricks[c] = [];
     for(let r = 0; r < brickRowCount;r++){
         bricks[c][r] = { x:0,y:0,status:1};
     }
+}
+
+function ballColorChange (){
+    const ballColorArray = ["red","green","blue","#0095DD"];
+    ballColor = ballColorArray[Math.floor(Math.random()*4)];
 }
 
 function drawBricks() {
@@ -78,16 +88,16 @@ function collisionDetection(){
         for(let r = 0; r < brickRowCount; r++) {
             const b = bricks[c][r];
             if(b.status === 1){
-                if(ball.x > b.x && ball.x < b.x + brickWidth && ball.y > b.y && ball.y <  b.y + brickHeight) {
-                    ball.dy = -ball.dy;
-                    ball.changeColor()
-                    b.status = 0;
-                    score ++;
-                    updateCombo()
-                    if(score == brickRowCount*brickColumnCount){
-                        alert("YOU WIN,CONGURATULATIONS!");
-                        document.location.reload();
-                    }
+            if(x > b.x && x < b.x + brickWidth && y > b.y && y <  b.y + brickHeight) {
+                dy = -dy;
+                ballColorChange()
+                b.status = 0;
+                score ++;
+                updateCombo()
+                if(score == brickRowCount*brickColumnCount){
+                    alert("YOU WIN,CONGURATULATIONS!");
+                    document.location.reload();
+                }
                 }
             }
         }
@@ -109,6 +119,7 @@ function updateCombo() {
 function drawCombo() {
     ctx.font = "16px Arial";
     ctx.fillStyle = "#0095DD";
+    console.log(combo);
     ctx.fillText("combo:" + combo, 8, 20);
 }
 
@@ -120,8 +131,8 @@ function drawScore() {
 
 function drawBall() {
     ctx.beginPath();
-    ctx.arc(ball.x, ball.y, ballRadius, 0, Math.PI*2);
-    ctx.fillStyle = ball.color;
+    ctx.arc(x,y,ballRadius,0,Math.PI*2);
+    ctx.fillStyle = ballColor;
     ctx.fill();
     ctx.closePath();
 }
@@ -144,14 +155,14 @@ function draw(){
     drawScore();
     drawCombo();
 
-    if (ball.y + ball.dy < ballRadius) {
-        ball.dy = -ball.dy;
-        ball.changeColor ();
-    }else if(ball.y + ball.dy > canvas.height-ballRadius){
+    if (y + dy < ballRadius) {
+        dy = -dy;
+        ballColorChange ();
+    }else if(y +dy > canvas.height-ballRadius){
         //このif文意味不明
-        if(ball.x > paddleX && ball.x < paddleX + paddleWidth) {
+        if(x > paddleX && x < paddleX + paddleWidth) {
             //なんやこれ
-            ball.dy = -ball.dy ;
+            dy = -dy ;
             //ブロックを返すにつれボールの速度をはやく(最速1ms)
             //speed -= 1;
         } else {
@@ -163,9 +174,9 @@ function draw(){
     }
 
     
-    if (ball.x + ball.dx < ballRadius || ball.x + ball.dx > canvas.width-ballRadius) {
-        ball.dx = -ball.dx;
-        ball.changeColor ();
+    if (x + dx < ballRadius || x + dx > canvas.width-ballRadius) {
+        dx = -dx;
+        ballColorChange ();
     }    
 
     if(rightPressed && paddleX < canvas.width-paddleWidth) {
@@ -173,7 +184,8 @@ function draw(){
     } else if (leftPressed && paddleX >0) {
         paddleX -= 3;
     } 
-    ball.move()
+    x += dx;
+    y += dy;
 }
 
 var interval = setInterval(draw, 1000 / 60);
